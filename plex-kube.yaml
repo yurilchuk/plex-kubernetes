@@ -94,7 +94,7 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   nfs: 
-    path: "/storage/hd0/plex/config"
+    path: "/storage/hd0/plex/"
     server: "10.1.1.200"
 
 ---
@@ -112,7 +112,7 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   nfs: 
-    path: "/storage/hd0/plex/transcode"
+    path: "/storage/hd0/plex/"
     server: "10.1.1.200"
 
 ---
