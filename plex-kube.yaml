@@ -222,7 +222,7 @@ spec:
         - name: TZ
           value: "America/Sao_Paulo"
         - name: PLEX_CLAIM
-          value: "claim-<CLAIM"
+          value: "claim-FKRucvRSh432mkzyyNkv"
         image: plexinc/pms-docker
         name: plex-server
         ports:
@@ -233,7 +233,7 @@ spec:
             memory: "2Gi"
           requests:
             cpu: "300m"
-            memory: "128Mi"
+            memory: "256Mi"
         volumeMounts:
         - mountPath: /data-01/
           name: plex-data-01
