@@ -18,6 +18,16 @@ volumeBindingMode: WaitForFirstConsumer
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
+  name: plex-data-02-sc
+  namespace: plex-server
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+---
+
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
   name: plex-config-sc
   namespace: plex-server
 provisioner: kubernetes.io/no-provisioner
@@ -56,6 +66,24 @@ spec:
 kind: PersistentVolume
 apiVersion: v1
 metadata:
+  name: plex-data-02-pv
+  namespace: plex-server
+spec:
+  storageClassName: plex-data-02-sc
+  capacity:
+    storage: 213Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs: 
+    path: "/storage/hd1/plex"
+    server: "10.1.1.2"
+
+---
+
+kind: PersistentVolume
+apiVersion: v1
+metadata:
   name: plex-config-pv
   namespace: plex-server
 spec:
@@ -66,7 +94,7 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   nfs: 
-    path: "/storage/hd0/plex"
+    path: "/storage/hd0/plex/config"
     server: "10.1.1.200"
 
 ---
@@ -84,7 +112,7 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
   nfs: 
-    path: "/storage/hd0/plex"
+    path: "/storage/hd0/plex/transcode"
     server: "10.1.1.200"
 
 ---
@@ -101,6 +129,21 @@ spec:
   resources:
     requests:
       storage: 433Gi
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-data-02-pvc
+  namespace: plex-server
+spec:
+  storageClassName: plex-data-02-sc
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 213Gi
 
 ---
 
@@ -186,14 +229,16 @@ spec:
         - containerPort: 32400
         resources:
           limits:
-            cpu: "2"
+            cpu: "3"
             memory: "1Gi"
           requests:
-            cpu: "100m"
+            cpu: "300m"
             memory: "128Mi"
         volumeMounts:
         - mountPath: /data-01/
           name: plex-data-01
+        - mountPath: /data-02/
+          name: plex-data-02
         - mountPath: /config
           name: plex-config
         - mountPath: /transcode
@@ -203,6 +248,9 @@ spec:
       - name: plex-data-01
         persistentVolumeClaim:
           claimName: plex-data-01-pvc
+      - name: plex-data-02
+        persistentVolumeClaim:
+          claimName: plex-data-02-pvc
       - name: plex-config
         persistentVolumeClaim:
           claimName: plex-config-pvc
