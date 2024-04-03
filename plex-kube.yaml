@@ -28,6 +28,16 @@ volumeBindingMode: WaitForFirstConsumer
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
+  name: plex-data-03-sc
+  namespace: plex-server
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+---
+
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
   name: plex-config-sc
   namespace: plex-server
 provisioner: kubernetes.io/no-provisioner
@@ -78,6 +88,24 @@ spec:
   nfs: 
     path: "/storage/hd1/plex"
     server: "10.1.1.2"
+
+---
+
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: plex-data-03-pv
+  namespace: plex-server
+spec:
+  storageClassName: plex-data-03-sc
+  capacity:
+    storage: 3Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs: 
+    path: "/storage/raid/hd0/plex"
+    server: "10.1.1.200"
 
 ---
 
@@ -144,6 +172,21 @@ spec:
   resources:
     requests:
       storage: 213Gi
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-data-03-pvc
+  namespace: plex-server
+spec:
+  storageClassName: plex-data-03-sc
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Ti
 
 ---
 
@@ -223,22 +266,26 @@ spec:
           value: "America/Sao_Paulo"
         - name: PLEX_CLAIM
           value: "claim-FKRucvRSh432mkzyyNkv"
+        - name: ADVERTISE_IP
+          value: "http://10.2.2.3:32400/"
         image: plexinc/pms-docker
         name: plex-server
         ports:
         - containerPort: 32400
         resources:
           limits:
-            cpu: "3"
-            memory: "2Gi"
+            cpu: "4"
+            memory: "4Gi"
           requests:
-            cpu: "300m"
+            cpu: "2"
             memory: "256Mi"
         volumeMounts:
         - mountPath: /data-01/
           name: plex-data-01
         - mountPath: /data-02/
           name: plex-data-02
+        - mountPath: /data-03/
+          name: plex-data-03
         - mountPath: /config
           name: plex-config
         - mountPath: /transcode
@@ -251,6 +298,9 @@ spec:
       - name: plex-data-02
         persistentVolumeClaim:
           claimName: plex-data-02-pvc
+      - name: plex-data-03
+        persistentVolumeClaim:
+          claimName: plex-data-03-pvc
       - name: plex-config
         persistentVolumeClaim:
           claimName: plex-config-pvc
